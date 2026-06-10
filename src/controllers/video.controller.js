@@ -4,6 +4,51 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { Video } from "../models/video.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
+export const getAllVideos = asyncHandler(async (req, res) => {
+  const { page = 1, limit = 4 } = req.query;
+  const options = {
+    page,
+    limit,
+  };
+  const videoDetails = Video.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "owner",
+        foreignField: "_id",
+        as: "Owner_Details",
+        pipeline: [
+          {
+            $project: {
+              fullName: 1,
+              userName: 1,
+              avatar: 1,
+            },
+          },
+        ],
+      },
+    },
+    {
+      $addFields: {
+        Owner_Details: { $first: "$Owner_Details" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        owner: 0,
+        __v: 0,
+      },
+    },
+  ]);
+
+  const result = await Video.aggregatePaginate(videoDetails, options);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, result, "Video get Successfully"));
+});
+
 export const publishVideo = asyncHandler(async (req, res) => {
   const { title, description } = req.body;
   if (!title || !description) {

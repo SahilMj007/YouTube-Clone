@@ -5,7 +5,7 @@ import { verifyJwt } from "../middlewares/auth.middileware.js";
 const videoRouter = express.Router();
 
 videoRouter.post(
-  "/upload/video",
+  "/upload",
   verifyJwt,
   upload.fields([
     { name: "video", maxCount: 1 },
@@ -13,7 +13,6 @@ videoRouter.post(
   ]),
   publishVideo,
 );
-
-videoRouter.post("/getAllVideos", verifyJwt, getAllVideos);
+videoRouter.get("/getAllVideos", getAllVideos);
 
 export default videoRouter;
